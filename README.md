@@ -1,7 +1,8 @@
 # BackTest
 QuantBackTest
 
-A back test framework for quant trading, 
+A back test framework for quant trading, tested based on USDJPY'candle
+TBD: load data from a rest api, draw figure.
 
 1. Create algorithm
 
@@ -37,3 +38,4 @@ runner.run()
 ```
 
 4. Get the report at current folder
+
