@@ -39,6 +39,9 @@ class TestRunner:
             yield time
             time = time + delta
 
+    def report_name(self):
+        return f"{self.algo.name.replace(' ', '_')}-{str(self.algo.parameters()).replace(')','').replace('(','').replace(',','_')}-{self.start.strftime('%Y-%m-%d')}-{self.end.strftime('%Y-%m-%d')}.csv"
+
     def run(self):
         self.algo.verify()
         time_step = self.time_step_generator()
@@ -48,5 +51,5 @@ class TestRunner:
                 for candle, delta, l_time in zip(self.generators, self.time_deltas, last_times)]
 
         self.algo.onAlgoEnd()
-        self.algo.get_account_handler().save_record(f"Corss_high_low-{str(self.algo.parameters()).replace(',','_')}-{self.start}-{self.end}.csv")
+        self.algo.get_account_handler().save_record(self.report_name())
         print("back test finished")

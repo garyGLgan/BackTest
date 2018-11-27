@@ -84,7 +84,7 @@ class AccountHandler:
             self.open_position = self.open_position.append(pd.DataFrame([[symbol, price, quantity, price*quantity ]],columns=["Symbol","Price","Quantity", "Value"]))
             self.nav = self.nav - ( self.open_position["Value"].sum() / price)
             print(f'Close postion {quantity} by {price} at {time}, NAV: {self.nav}')
-            self.__trade__(time, symbol, -quantity, price, isclose=True)
+            self.__trade__(time, symbol,  quantity, price, isclose=True)
             self.open_position = self.open_position.iloc[0:0]
 
     def get_nav(self):
