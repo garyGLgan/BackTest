@@ -42,7 +42,7 @@ class TestRunner:
     def report_name(self):
         return f"{self.algo.name.replace(' ', '_')}-{str(self.algo.parameters()).replace(')','').replace('(','').replace(',','_')}-{self.start.strftime('%Y-%m-%d')}-{self.end.strftime('%Y-%m-%d')}.csv"
 
-    def run(self):
+    def run(self, save_report=True):
         self.algo.verify()
         time_step = self.time_step_generator()
         last_times = [ next(t) for t in self.generators]
@@ -51,5 +51,5 @@ class TestRunner:
                 for candle, delta, l_time in zip(self.generators, self.time_deltas, last_times)]
 
         self.algo.onAlgoEnd()
-        self.algo.get_account_handler().save_record(self.report_name())
+        if save_report: self.algo.get_account_handler().save_record(self.report_name())
         print("back test finished")
