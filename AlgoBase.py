@@ -17,29 +17,14 @@ class AlgoBase():
     
     def get_handlers(self):
         return self.candle_handlers
-    
-    # def set_handlers(self, handlers):
-    #     self.handlers = handlers
    
     def verify(self):
         if len(self.candles) != len(self.candle_handlers): raise ValueError("please assign handlers for all candles before test algorithm")
-
-    # def buy(self, time, price, quantity):
-    #     self.account_handler.buy(time,self.symbol, quantity, price)
-
-    # def sell(self, time, price, quantity):
-    #     self.account_handler.sell(time,self.symbol,quantity,price)
-
-    # def close(self, time, price):
-    #     self.account_handler.close(time, self.symbol, price)
-
-    # def get_nav(self):
-    #     return self.account_handler.get_nav()
-
-    # def get_position(self):
-    #     return self.account_handler.get_position()
-    
+  
     def on_algo_end(self):
+        pass
+    
+    def on_algo_start(self):
         pass
 
     def parameters(self):

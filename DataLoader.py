@@ -6,11 +6,11 @@ import pdb
 def get_csv_candle_loader(candle_type, path, start=datetime(2013,1,1,0,0,0), end=date.today(),converter = None):
     return CsvCandleLoader(candle_type, path, start=start, end=end, converter=converter)
 
-def get_oanda_candle_loader(symbol, account_id, period, time_delta, handler, ctx):
-    return OandaCandleLoader(symbol, account_id, period, time_delata, handler, ctx)
+def get_oanda_candle_loader(symbol, account_id, period, time_delta, ctx):
+    return OandaCandleLoader(symbol, account_id, period, time_delta, ctx)
 
-def get_oanda_tick_loader( account_id, symbol, handler, ctx):
-    return OandaTickLoader(account_id, symbol, handler, ctx)
+def get_oanda_tick_loader(account_id, symbol, ctx):
+    return OandaTickLoader(account_id, symbol, ctx)
 
 class DataLoader:
     def __init__(self, candle_type, start=datetime(2013,1,1,0,0,0), end=date.today()):
@@ -69,25 +69,26 @@ class CandlestickData:
         return CandlestickData(**data)
 
 class OandaCandleLoader(DataLoader):
-    def __init__(self, symbol, account_id, period, time_delta, handler, ctx, N=10):
-        self.ctx, self.account_id, self.symbol, self.period, self.time_delta, self.handler,self.N = ctx, account_id, symbol,period, time_delta, handler, N
+    def __init__(self, symbol, account_id, period, time_delta, ctx, N=10):
+        self.ctx, self.account_id, self.symbol, self.period, self.time_delta, self.N = ctx, account_id, symbol,period, time_delta, N
     
-    def loaderData(self):
-        start_time = datetime.utcnow()-self.time_delta
+    def loadData(self):
         while True:
-            end_time = datetime.utcnow()-self.time_delta
-            candle_args = {'granularity': self.period, 'price':'MBA', 'count': self.N, 'fromTime' : start_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ'), 'toTime': end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')}
+            time = datetime.utcnow()-self.time_delta
+            candle_args = {'granularity': self.period, 'price':'MBA',  
+                'fromTime' : time.strftime('%Y-%m-%dT%H:%M:%S.%fZ'), 
+                'toTime': time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')}
+            # print(f'generator in OandaCandleLoader by time {time}, now: {datetime.utcnow()}, delta:{self.time_delta}')
             candle_resp = self.ctx.instrument.candles(self.symbol, **candle_args)
-            start_time = end_time
-            if not hasattr(candle_resp, "candles") or  len(candle_resp.get('candles')) == 0:
+            if len(candle_resp.get('candles')) == 0:
                 yield None
             else:
                 for candle in candle_resp.get('candles'):
                     yield candle
 
 class OandaTickLoader(DataLoader):
-    def __init__(self, account_id, symbol, handler, ctx):
-        self.ctx, self.account_id, self.symbol, self.handler = ctx, account_id, symbol, handler
+    def __init__(self, account_id, symbol, ctx):
+        self.ctx, self.account_id, self.symbol = ctx, account_id, symbol
     
     def loadData(self):
         price_resp = self.ctx.pricing.stream(self.account_id, snapshot=True, instruments=self.symbol)
