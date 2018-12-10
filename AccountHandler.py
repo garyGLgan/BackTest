@@ -48,17 +48,9 @@ class AccountHandler:
     def get_position(self,symbol):
         return self.open_position["Quantity"].sum()
 
-    def buy(self, time,symbol, quantity, price=None):
-        pass
-        
-    def sell(self, time, symbol, quantity, price=None):
-        pass
-
-    def close(self,time, symbol, price=None):
-        pass
-
 class OandaAccountHandler(AccountHandler):
     def __init__(self, account_id, ctx):
+        super(OandaAccountHandler,self).__init__()
         self.ctx, self.account_id = ctx, account_id
         account = self.get_account_summary(ctx)
         self.__nav__= account.marginCloseoutNAV
@@ -99,7 +91,7 @@ class OandaAccountHandler(AccountHandler):
 class LocalAccountHandler(AccountHandler):
     def __init__(self,cash, leverage):
         super(LocalAccountHandler, self).__init__()
-  
+        self.__leverage__ = leverage
         self.__nav__ = cash
         
     def __trade__(self, time, symbol, quantity, price, isclose=False):

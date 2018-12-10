@@ -46,31 +46,33 @@ class AlgoRunner:
         return TestRunner(algo, start,end, path, tick_candle, tick_conveter)
 
     @staticmethod
-    def get_oanda_runner(algo,account_id, ctx):
-        return OandaRunner(algo, account_id, ctx)
+    def get_oanda_runner(algo,account_id, ctx, ctx_stream):
+        return OandaRunner(algo, account_id, ctx, ctx_stream)
 
 class OandaRunner(AlgoRunner):
-    def __init__(self, algo, account_id, ctx):
+    def __init__(self, algo, account_id, ctx, ctx_stream):
         super(OandaRunner, self).__init__(algo)
-        self.tick_generator = get_oanda_tick_loader(account_id, self.algo.symbol, self.algo.on_tick, ctx)
+        self.tick_generator = get_oanda_tick_loader(account_id, self.algo.symbol, ctx_stream).loadData()
+        self.candle_loaders = [ get_oanda_candle_loader(self.algo.symbol, account_id, c, d,ctx ).loadData() for d, c in zip (self.time_deltas, self.algo.get_candles())]
+        self.generators = [self.candle_handle_generator(c,h, d) for c, h, d in zip(self.candle_loaders, self.candle_handlers, self.time_deltas)]
 
-def candle_handle_generator(self, candle_loader, candle_handler):
-    for c in candle_loader:
-        if c is None:
-            yield datetime.utcnow()
-        candle_handler(c)
-        yield c.time
+    def candle_handle_generator(self, candle_loader, candle_handler, time_delta):
+        for c in candle_loader:
+            if c is None:
+                yield datetime.utcnow()-time_delta
+            else:
+                candle_handler(c)
+                yield self.parseDatetime(c.time) 
 
-def run(self, save_report= True):
-    last_times = [datetime.utcnow() for i in self.algo.get_candles() ]
-    for tick in self.tick_generator:
-        time = self.parseDatetime(tick.time)
-        last_times = [ l_time if l_time + delta > time else datetime.strptime(next(candle),'%Y-%m-%d %H:%M:%S') 
-                for candle, delta, l_time in zip(self.generators, self.time_deltas, last_times)]
-        self.algo.on_tick(tick)
+    def run(self, save_report= True):
+        last_times = [datetime.utcnow() for i in self.algo.get_candles() ]
+        for tick in self.tick_generator:
+            time = self.parseDatetime(tick.time)
+            last_times = [ l_time if l_time + delta + delta > time else next(candle) for candle, delta, l_time in zip(self.generators, self.time_deltas, last_times)]
+            self.algo.on_tick(tick)
 
-def parseDatetime(self, msg):
-    return datetime.strptime(msg[:-4]+msg[-1],'%Y-%m-%dT%H:%M:%S.%fZ')
+    def parseDatetime(self, msg):
+        return datetime.strptime(msg[:-4]+msg[-1],'%Y-%m-%dT%H:%M:%S.%fZ')
         
 class TestRunner(AlgoRunner):
     
