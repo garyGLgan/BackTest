@@ -19,7 +19,8 @@ class AlgoBase():
         return self.candle_handlers
    
     def verify(self):
-        if len(self.candles) != len(self.candle_handlers): raise ValueError("please assign handlers for all candles before test algorithm")
+        if len(self.candles) != len(self.candle_handlers): 
+            raise ValueError("please assign handlers for all candles before test algorithm")
   
     def on_algo_end(self):
         pass
