@@ -16,7 +16,7 @@ class AccountHandler:
     def __init__(self, record_path):
         self.__nav__ = 0
         self.__leverage__ = 0
-        self.records = pd.DataFrame(columns=["Time", "Symbol","Price","Quantity", "Value","NAV"])
+        self.records = pd.DataFrame(columns=["Action","Time", "Symbol","Price","Quantity", "Value","NAV"])
         self.records['Time'] = pd.to_datetime(self.records["Time"])
         self.records['Price'] = pd.to_numeric(self.records['Price'])
         self.records['Quantity'] = pd.to_numeric(self.records['Quantity'])
@@ -35,20 +35,20 @@ class AccountHandler:
             self.write_record, self.record_path = False, None
         else:
             self.record_path = record_path
-            self.records.to_csv(record_path)
+            self.records.to_csv(record_path, index=False)
             self.write_record = True
 
     def __write_row__(self, df):
         with open(self.record_path, 'a') as f:
-            df.to_csv(f, header=False)
+            df.to_csv(f, header=False, index=False)
             f.close()
 
     def __save_position__(self,time, symbol, price, quantity):
         row = pd.DataFrame([[symbol, price, quantity, price*quantity]],columns=["Symbol","Price","Quantity", "Value"])
         self.open_position = self.open_position.append(row)
 
-    def __save_record__(self,time, symbol, price, quantity):
-        record_row = pd.DataFrame([[time, symbol, price, quantity, price * quantity, self.__nav__]], columns=["Time", "Symbol","Price","Quantity", "Value","NAV"])
+    def __save_record__(self,time, symbol, price, quantity,action):
+        record_row = pd.DataFrame([[action, time, symbol, price, quantity, price * quantity, self.__nav__]], columns=["Action","Time", "Symbol","Price","Quantity", "Value","NAV"])
         self.records = self.records.append(record_row)
         if self.write_record: self.__write_row__(record_row)
         
@@ -79,7 +79,7 @@ class OandaAccountHandler(AccountHandler):
             print(f'submitted trade quantity:{quantity} price:{price}')
             send([f"account({self.account_id}) trade {symbol} quantity:{quantity} price:{price} at {time}"])
             self.__save_position__(time,symbol, price, quantity)
-            self.__save_record__(time,symbol, price, quantity)
+            self.__save_record__("Trade",time,symbol, price, quantity)
 
     def refresh_nav(self):
         account = self.get_account_summary(self.ctx)
@@ -102,7 +102,7 @@ class OandaAccountHandler(AccountHandler):
                 self.__save_position__(time,symbol, price, quantity)
                 self.refresh_nav()
                 send([f'"account({self.account_id}) Close postion {quantity} by {price} at {time}, NAV: {self.get_nav()}'] )
-                self.__save_record__(time,symbol, price, quantity)
+                self.__save_record__("Close",time,symbol, price, quantity)
                 self.reset_open_postion()
 
     def get_account_summary(self, ctx):
@@ -118,8 +118,7 @@ class LocalAccountHandler(AccountHandler):
     def __trade__(self, time, symbol, quantity, price, isclose=False):
         print(f"trade {symbol} quantity:{quantity} price:{price} at {time}")
         self.__save_position__(time,symbol, price, quantity)
-        self.refresh_nav(price)
-        self.__save_record__(time,symbol, price, quantity)
+        self.__save_record__("Trade",time,symbol, price, quantity)
 
     def buy(self, time,symbol, quantity, price):
         if quantity > 0 and self.__nav__ > 0: self.__trade__(time,symbol, quantity, price)
@@ -132,7 +131,7 @@ class LocalAccountHandler(AccountHandler):
         if quantity != 0:
             self.__save_position__(time,symbol, price, quantity)
             self.refresh_nav(price)
-            self.__save_record__(time,symbol, price, quantity)
+            self.__save_record__("Close",time,symbol, price, quantity)
             self.reset_open_postion()
             print(f'Close postion {quantity} by {price} at {time}, NAV: {self.get_nav()}')
     
