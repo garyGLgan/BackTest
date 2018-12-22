@@ -47,7 +47,7 @@ class AccountHandler:
         row = pd.DataFrame([[symbol, price, quantity, price*quantity]],columns=["Symbol","Price","Quantity", "Value"])
         self.open_position = self.open_position.append(row)
 
-    def __save_record__(self,time, symbol, price, quantity,action):
+    def __save_record__(self,action,time, symbol, price, quantity):
         record_row = pd.DataFrame([[action, time, symbol, price, quantity, price * quantity, self.__nav__]], columns=["Action","Time", "Symbol","Price","Quantity", "Value","NAV"])
         self.records = self.records.append(record_row)
         if self.write_record: self.__write_row__(record_row)
